@@ -21,6 +21,7 @@ const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology:
 client.connect(err => {
   const serviceCollection = client.db("amirPhoto").collection("services");
   const orderCollection = client.db("amirPhoto").collection("orders");
+  const adminCollection = client.db("amirPhoto").collection("admin");
   // perform actions on the collection object
   
 
@@ -87,7 +88,34 @@ app.get('/orderList', (req, res) => {
 })
 
 
+// Order via Email
+app.get('/orderViaEmail', (req, res) => {
+    orderCollection.find({email: req.query.email})
+    .toArray((err, documents) => {
+        res.status(200).send(documents)
+        console.log(documents)
+        console.log(err)
+    })
+})
 
+// adding Admin
+app.post('/addAdmin', (req, res) => {
+    const admin = req.body;
+    adminCollection.insertOne(admin)
+    .then(result => {
+        res.send(result.insertedCount > 0)
+    })
+})
+
+// admin rule 
+app.post('/isAdmin', (req, res) => {
+    const email = req.body.email;
+    adminCollection.find({email: email})
+    .toArray((err, admin) => {
+        res.send(admin.length > 0)
+        console.log(err)
+    })
+})
 
 
 
