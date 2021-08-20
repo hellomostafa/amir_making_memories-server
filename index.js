@@ -1,12 +1,13 @@
 const express = require('express');
 const cors = require('cors');
-const ObjectId = require('mongodb').ObjectId;
 const port =  4040;
+const { MongoClient } = require('mongodb');
+const ObjectId = require('mongodb').ObjectId;
 require('dotenv').config();
 
 const app = express();
 app.use(cors());
-app.use(express.json())
+app.use(express.json());
 
 app.get('/', (req, res) => {
     res.send('Hey, This is Amir Making Memories Server!')
@@ -15,8 +16,7 @@ app.get('/', (req, res) => {
 
 
 
-const { MongoClient } = require('mongodb');
-const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.pcwvo.mongodb.net/${process.env.DB_NAME}?retryWrites=true&w=majority`
+const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.pcwvo.mongodb.net/${process.env.DB_NAME}?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
 client.connect(err => {
   const serviceCollection = client.db("amirPhoto").collection("services");
@@ -45,7 +45,7 @@ client.connect(err => {
 
 
 // getting Services By Id
-app.get('/makeOrder/:id', (req, res) => {
+app.get('/services/:id', (req, res) => {
     // const id = ObjectId(req.params._id)
     serviceCollection.find({_id: ObjectId(req.params.id)})
     .toArray((err, documents) => {
@@ -54,15 +54,17 @@ app.get('/makeOrder/:id', (req, res) => {
     })
 })
 
-// getting Service Details By Id
-app.get('/serviceDetails/:id', (req, res) => {
-    // const id = ObjectId(req.params._id)
-    serviceCollection.find({_id: ObjectId(req.params.id)})
-    .toArray((err, documents) => {
-        res.send(documents[0])
-        console.log(err)
+
+// Delete Service
+app.delete('/delete/:id', (req, res) => {
+    serviceCollection.deleteOne({_id: ObjectId(req.params.id)})
+    .then(result => {
+        res.send(result.deletedCount > 0)
     })
 })
+
+
+
 
 
 
@@ -73,8 +75,8 @@ app.post('/addOrder', (req, res) => {
     const order = req.body;
     orderCollection.insertOne(order)
     .then(result => {
-        res.send(result.insertedCount > 0)
         console.log(result)
+        res.send(result.insertedCount > 0)
     })
 })
 
@@ -90,7 +92,7 @@ app.get('/orderList', (req, res) => {
 
 // Order via Email
 app.get('/orderViaEmail', (req, res) => {
-    orderCollection.find({email: req.query.email})
+    orderCollection.find({customerEmail: req.query.email})
     .toArray((err, documents) => {
         res.status(200).send(documents)
         console.log(documents)
@@ -119,6 +121,13 @@ app.post('/isAdmin', (req, res) => {
 
 
 
+app.get('/admin', (req, res) => {
+    adminCollection.find()
+    .toArray((err, documents) => {
+        res.send(documents)
+        console.log(err)
+    })
+})
 
 
 
